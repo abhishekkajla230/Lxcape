@@ -327,6 +327,21 @@ PrefabInstance:
       propertyPath: m_Name
       value: mansion room 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4781164923075925778, guid: d4eca8096c59c4b3fab519c68e81ae68,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 2.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 4781164923075925778, guid: d4eca8096c59c4b3fab519c68e81ae68,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4781164923075925778, guid: d4eca8096c59c4b3fab519c68e81ae68,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 4.48
+      objectReference: {fileID: 0}
     - target: {fileID: 5716077764431143317, guid: d4eca8096c59c4b3fab519c68e81ae68,
         type: 3}
       propertyPath: m_LocalPosition.x
