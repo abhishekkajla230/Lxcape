@@ -2,13 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum GameStates : int //03 Dec
+{
+    Idle = 1,
+    PlayingSequence = 2,
+    ArrangeLetter = 3,
+}
+
 public class LetterManager : MonoBehaviour
 {
     public static LetterManager Instance;
 
+    public GameStates currentState; //03 DEC //
+
     public List<Material> colors;
     public List<Transform> spawnPoints;
     public GameObject letterPrefab;
+
+    public string currentText = "";//03 dec //
 
     public List<LetterSlot> letterSlots;
 
@@ -18,17 +29,30 @@ public class LetterManager : MonoBehaviour
 
     public GameObject successObject;
 
+    public GameScreen gameScreen;
+
     private List<GameObject> spwanedItems;
 
     private int sequenceIndex;
 
     void Start()
     {
+        currentState = GameStates.Idle; //03 dec//
         Instance = this;
         sequenceIndex = -1;
         successObject.SetActive(false);
         spwanedItems = new List<GameObject>();
         SpawnLetters();
+    }
+
+    public void WordArranged() //03 dec
+    {
+        if (currentState == GameStates.Idle)
+        {
+            gameScreen.UpdateText(currentText);
+            currentState = GameStates.PlayingSequence;
+            StartCoroutine(PlaySequence());
+        }
     }
 
     void SpawnLetters()
@@ -100,6 +124,9 @@ public class LetterManager : MonoBehaviour
         {
             StartCoroutine(StartNewSequence());
         }
+
+        //02 DEC
+     
         
     }
 
