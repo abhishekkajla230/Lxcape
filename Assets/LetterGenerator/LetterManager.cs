@@ -2,73 +2,90 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum GameStates : int //03 Dec
-{
-    Idle = 1,
-    PlayingSequence = 2,
-    ArrangeLetter = 3,
-}
-
 public class LetterManager : MonoBehaviour
 {
-    public static LetterManager Instance;
+    public enum GameStates : int
+    {
+        Idle = 0,
+        PlayNarration = 1,
+        ArrangingLetters = 2,
+        Finished = 3,
+    }
 
-    public GameStates currentState; //03 DEC //
+    public GameStates currentState = GameStates.Idle;
+
+    public static LetterManager Instance;
 
     public List<Material> colors;
     public List<Transform> spawnPoints;
     public GameObject letterPrefab;
 
-    public string currentText = "";//03 dec //
-
     public List<LetterSlot> letterSlots;
+
+    public List<string> sentenceList;
+    int currentSentence;
 
     public List<string> sequenceList;
 
     public string targetSentence;
 
-    public GameObject successObject;
-
     public GameScreen gameScreen;
 
     private List<GameObject> spwanedItems;
 
+    public List<AudioClip> sentenceAudio;
+
+    public AudioClip audioClipNarration;
+
     private int sequenceIndex;
+
+    bool narrationPlayed = false;
 
     void Start()
     {
-        currentState = GameStates.Idle; //03 dec//
         Instance = this;
+        narrationPlayed = false;
+        currentState = GameStates.Idle;
         sequenceIndex = -1;
-        successObject.SetActive(false);
+        
         spwanedItems = new List<GameObject>();
-        SpawnLetters();
+
+
+        currentSentence = -1;
+        CreateSequence();
     }
 
-    public void WordArranged() //03 dec
+    void CreateSequence()
     {
-        if (currentState == GameStates.Idle)
+        sequenceList.Clear();
+
+        currentSentence = currentSentence + 1;
+        if (currentSentence >= sentenceList.Count - 1)
         {
-            gameScreen.UpdateText(currentText);
-            currentState = GameStates.PlayingSequence;
-            StartCoroutine(PlaySequence());
+            currentSentence = 0;
+        }
+
+        string sentence = sentenceList[currentSentence];
+        string [] words = sentence.Split(' ');
+        foreach (string word in words)
+        {
+            sequenceList.Add(word); 
         }
     }
 
     void SpawnLetters()
     {
+        
+        sequenceIndex = sequenceIndex + 1;
+        if (sequenceIndex >= sequenceList.Count)
+        {
+            return;
+        }
+        
         for (int i = 0; i < letterSlots.Count; i++)
         {
             letterSlots[i].gameObject.SetActive(false);
             letterSlots[i].ClearSlot();
-        }
-        successObject.SetActive(false);
-
-
-        sequenceIndex = sequenceIndex + 1;
-        if (sequenceIndex >= sequenceList.Count)
-        {
-            sequenceIndex = 0;
         }
 
         targetSentence = sequenceList[sequenceIndex];
@@ -78,7 +95,6 @@ public class LetterManager : MonoBehaviour
             Destroy(spwanedItems[i]);
         }
         spwanedItems.Clear();
-
 
         List<Transform> spawns = new List<Transform>(spawnPoints);
         for (int i = 0; i < targetSentence.Length; i++)
@@ -95,14 +111,9 @@ public class LetterManager : MonoBehaviour
 
             letterSlots[i].gameObject.SetActive(true);
             letterSlots[i].SetCurrentColor(colors[idx_c]);
-            
         }
-    }
 
-    
-    void Update()
-    {
-        
+        UpdateScreenText();
     }
 
     public void CheckSequence()
@@ -118,24 +129,96 @@ public class LetterManager : MonoBehaviour
             }
         }
 
-        successObject.SetActive(correct);
-
         if (correct)
         {
-            StartCoroutine(StartNewSequence());
+            if (sequenceIndex >= sequenceList.Count - 1)
+            {
+                ExecuteFinishState();
+            }
+            else
+            {
+                StartCoroutine(StartNewSequence());
+            }
         }
-
-        //02 DEC
-     
         
     }
 
+    void UpdateScreenText()
+    {
+        string text = "";
+        int i = 0;
+        for (i = 0; i < sequenceIndex && i < sequenceList.Count; i++)
+        {
+            text += " " + sequenceList[i].ToString();
+        }
+
+        if (currentState == GameStates.Finished)
+        {
+            text += " " + sequenceList[sequenceList.Count - 1];
+        }
+        else
+        {
+            text += "  ";
+            for (int k = 0; k < sequenceList[i].Length; k ++)
+            {
+                text += "_ ";
+            }
+            
+        }
+
+        gameScreen.UpdateText(text);
+    }
 
     IEnumerator StartNewSequence()
     {
-        yield return new WaitForSeconds(5.0f);
+        yield return new WaitForSeconds(1.0f);
         SpawnLetters();
     }
-    
+    IEnumerator PlayNarration()
+    {
+        if (narrationPlayed == false)
+        {
+            narrationPlayed = true;
+            GetComponent<AudioSource>().clip = audioClipNarration;
+            GetComponent<AudioSource>().Play();
+            yield return new WaitForSeconds(22f);
+            Debug.Log("PlayNarration");
+        }
+        
+        NextWord();
+    }
+
+    private void NextWord()
+    {
+        Debug.Log("NextWord");
+
+        currentState = GameStates.ArrangingLetters;
+        sequenceIndex = -1;
+        SpawnLetters();
+    }
+
+    void ExecuteFinishState()
+    {
+        Debug.Log("ExecuteFinishState");
+        currentState = GameStates.Finished;
+        UpdateScreenText();
+
+        GetComponent<AudioSource>().clip = sentenceAudio[currentSentence];
+        GetComponent<AudioSource>().Play();
+        
+        CreateSequence();
+        currentState = GameStates.Idle;
+    }
+
+    public void OnButtonPressed()
+    {
+        Debug.Log("OnButtonPressed");
+        if (currentState == GameStates.Idle)
+        {
+            currentState = GameStates.PlayNarration;
+            
+            StartCoroutine(PlayNarration());
+        }
+    }
 
 }

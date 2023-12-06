@@ -8,7 +8,7 @@ public class GameScreen : MonoBehaviour
     public TextMeshProUGUI screenText;
     void Start()
     {
-        screenText.text = "Test abhishek";
+        screenText.text = "LearnXcape";
     }
 
     public void UpdateText(string wordtext)
